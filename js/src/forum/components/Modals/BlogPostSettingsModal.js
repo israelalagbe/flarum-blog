@@ -14,7 +14,9 @@ export default class BlogPostSettingsModal extends Modal {
           ? this.attrs.article.blogMeta()
           : app.store.createRecord("blogMeta");
     } else {
-      this.meta = this.attrs.meta ? this.attrs.meta : app.store.createRecord("blogMeta");
+      this.meta = this.attrs.meta
+        ? this.attrs.meta
+        : app.store.createRecord("blogMeta");
     }
 
     this.isNew = !this.meta.exists;
@@ -48,8 +50,7 @@ export default class BlogPostSettingsModal extends Modal {
 
     console.log("link", link);
 
-    this.featuredImage(link)
-
+    this.featuredImage(link);
 
     // let stringToInject = this.buildEmbedCode(response.data.link, response.data.width > 1024);
 
@@ -57,7 +58,7 @@ export default class BlogPostSettingsModal extends Modal {
 
     // After a bit, re-enable upload
     setTimeout(() => {
-      console.log("featuredImage",this.featuredImage())
+      console.log("featuredImage", this.featuredImage());
       this.isSuccess = false;
       m.redraw();
     }, 2000);
@@ -71,7 +72,9 @@ export default class BlogPostSettingsModal extends Modal {
     // Output the error to the console, for debugging purposes
     console.error(response);
 
-    alert("Error occured while uploading the image, please check your internet connection.")
+    alert(
+      "Error occured while uploading the image, please check your internet connection."
+    );
 
     // After a bit, re-enable upload
     setTimeout(() => {
@@ -100,7 +103,8 @@ export default class BlogPostSettingsModal extends Modal {
     $.ajax({
       url: "https://api.imgur.com/3/image",
       headers: {
-        Authorization: "Client-ID " + app.forum.attribute("imgur-upload.client-id"),
+        Authorization:
+          "Client-ID " + app.forum.attribute("imgur-upload.client-id"),
       },
       type: "POST",
       data: formData,
@@ -140,7 +144,8 @@ export default class BlogPostSettingsModal extends Modal {
         />
 
         <small>
-          This summary will be visible on the blog overview page and will be used for SEO purposes.
+          This summary will be visible on the blog overview page and will be
+          used for SEO purposes.
         </small>
       </div>,
       30
@@ -151,7 +156,12 @@ export default class BlogPostSettingsModal extends Modal {
       <div className="Form-group">
         <label>Article Image:</label>
 
-        <input accept="image/*" type="file" className="FormControl" onchange={this.formUpload} />
+        <input
+          accept="image/*"
+          type="file"
+          className="FormControl"
+          onchange={this.formUpload}
+        />
         <input
           id="articleImageURl"
           type="text"
