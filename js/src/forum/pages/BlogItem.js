@@ -151,8 +151,10 @@ export default class BlogItem extends Page {
         ? this.article.firstPost()
         : app.store.getById("posts", this.article.firstPostId());
     }
-    const canEditArticle = this.article?.user()?.id?.()? this.article?.user()?.id?.() === app.session.user?.id?.(): false;
-    console.log("canEditArticle",)
+    const canEditArticle = this.article?.user()?.id?.()
+      ? this.article?.user()?.id?.() === app.session.user?.id?.()
+      : false;
+    console.log("canEditArticle");
     return (
       <div className={"FlarumBlogItem"}>
         <div className={"container"}>
@@ -189,9 +191,9 @@ export default class BlogItem extends Page {
                   }}
                 />
 
-                {(canEditArticle || app.session?.user.canEdit?.()) && (
-                    <BlogPostController article={this.article} />
-                  )}
+                {(canEditArticle || app.session?.user?.canEdit?.()) && this.article && (
+                  <BlogPostController article={this.article} />
+                )}
 
                 {/* Article Categories */}
                 <div className={"FlarumBlog-Article-Categories"}>
