@@ -43,7 +43,7 @@ v17development-flarum-blog:
     return_to_overview: "Return to blog overview "
     no_more_posts: "No more blog posts."
     category_empty: "There are no blog posts in this category."
-    
+
     compose:
       write_article: "Write article"
 
@@ -71,7 +71,7 @@ v17development-flarum-blog:
       update_category: "Update categories"
       article_settings: "Article settings"
       approve_article: "Approve article"
-      hide_article: "Hide article"
+      hide_article: "Delete article"
       recover_article: "Recover article"
       delete_forever: "Delete forever"
       enable_comments: "Enable comments"

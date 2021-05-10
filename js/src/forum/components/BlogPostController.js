@@ -244,7 +244,7 @@ export default class BlogPostController extends Component {
             {
               className: "Button",
               onclick: DiscussionControls.hideAction.bind(article),
-              icon: "fas fa-eye-slash",
+              icon: "fas fa-trash",
             },
             app.translator.trans(
               "v17development-flarum-blog.forum.tools.hide_article"

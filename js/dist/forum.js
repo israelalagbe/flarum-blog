@@ -628,7 +628,7 @@ var BlogPostController = /*#__PURE__*/function (_Component) {
         buttons.push(flarum_components_Button__WEBPACK_IMPORTED_MODULE_5___default.a.component({
           className: "Button",
           onclick: flarum_utils_DiscussionControls__WEBPACK_IMPORTED_MODULE_3___default.a.hideAction.bind(article),
-          icon: "fas fa-eye-slash"
+          icon: "fas fa-trash"
         }, app.translator.trans("v17development-flarum-blog.forum.tools.hide_article")));
       }
     }
@@ -1033,6 +1033,7 @@ var BlogPostSettingsModal = /*#__PURE__*/function (_Modal) {
     this.isFeatured = flarum_utils_Stream__WEBPACK_IMPORTED_MODULE_4___default()(this.meta.isFeatured() || false);
     this.isSized = flarum_utils_Stream__WEBPACK_IMPORTED_MODULE_4___default()(this.meta.isSized() || false);
     this.isPendingReview = flarum_utils_Stream__WEBPACK_IMPORTED_MODULE_4___default()(this.meta.isPendingReview() || false);
+    this.formUpload = this.formUpload.bind(this);
   };
 
   _proto.className = function className() {
@@ -1041,6 +1042,73 @@ var BlogPostSettingsModal = /*#__PURE__*/function (_Modal) {
 
   _proto.title = function title() {
     return "Blog post settings";
+  };
+
+  _proto.success = function success(response) {
+    var _this = this;
+
+    this.$("input").val("");
+    this.isLoading = false;
+    this.isSuccess = true;
+    m.redraw();
+    var link = response.data.link;
+    console.log("link", link);
+    this.featuredImage(link); // let stringToInject = this.buildEmbedCode(response.data.link, response.data.width > 1024);
+    // this.attrs.editor.insertAtCursor(stringToInject);
+    // After a bit, re-enable upload
+
+    setTimeout(function () {
+      console.log("featuredImage", _this.featuredImage());
+      _this.isSuccess = false;
+      m.redraw();
+    }, 2000);
+  };
+
+  _proto.error = function error(response) {
+    var _this2 = this;
+
+    this.isLoading = false;
+    this.isError = true;
+    m.redraw(); // Output the error to the console, for debugging purposes
+
+    console.error(response);
+    alert("Error occured while uploading the image, please check your internet connection."); // After a bit, re-enable upload
+
+    setTimeout(function () {
+      _this2.isError = false;
+      m.redraw();
+    }, 2000);
+  };
+
+  _proto.formUpload = function formUpload(e) {
+    var files = this.$("input").prop("files");
+
+    if (files.length === 0) {
+      return;
+    }
+
+    this.upload(files[0]);
+  };
+
+  _proto.upload = function upload(file) {
+    this.isError = false;
+    this.isLoading = true;
+    m.redraw();
+    var formData = new FormData();
+    formData.append("image", file);
+    $.ajax({
+      url: "https://api.imgur.com/3/image",
+      headers: {
+        Authorization: "Client-ID " + app.forum.attribute("imgur-upload.client-id")
+      },
+      type: "POST",
+      data: formData,
+      cache: false,
+      contentType: false,
+      processData: false,
+      success: this.success.bind(this),
+      error: this.error.bind(this)
+    });
   };
 
   _proto.content = function content() {
@@ -1052,7 +1120,7 @@ var BlogPostSettingsModal = /*#__PURE__*/function (_Modal) {
   };
 
   _proto.fields = function fields() {
-    var _this = this;
+    var _this3 = this;
 
     var items = new flarum_utils_ItemList__WEBPACK_IMPORTED_MODULE_3___default.a();
     items.add("summary", m("div", {
@@ -1070,9 +1138,15 @@ var BlogPostSettingsModal = /*#__PURE__*/function (_Modal) {
     }), m("small", null, "This summary will be visible on the blog overview page and will be used for SEO purposes.")), 30);
     items.add("image", m("div", {
       className: "Form-group"
-    }, m("label", null, "Article image URL:"), m("input", {
-      type: "text",
+    }, m("label", null, "Article Image:"), m("input", {
+      accept: "image/*",
+      type: "file",
       className: "FormControl",
+      onchange: this.formUpload
+    }), m("input", {
+      id: "articleImageURl",
+      type: "text",
+      className: "d-none",
       bidi: this.featuredImage,
       placeholder: "https://"
     }), m("small", null, "Best image resolution for social media: 1200x630"), this.featuredImage() != "" && m("img", {
@@ -1089,7 +1163,7 @@ var BlogPostSettingsModal = /*#__PURE__*/function (_Modal) {
     }, flarum_components_Switch__WEBPACK_IMPORTED_MODULE_5___default.a.component({
       state: this.isSized() == true,
       onchange: function onchange(val) {
-        _this.isSized(val);
+        _this3.isSized(val);
       }
     }, [m("b", null, "Highlighted post"), m("div", {
       className: "helpText",
@@ -1102,7 +1176,7 @@ var BlogPostSettingsModal = /*#__PURE__*/function (_Modal) {
     }, flarum_components_Button__WEBPACK_IMPORTED_MODULE_2___default.a.component({
       type: "submit",
       className: "Button Button--primary SupportModal-save",
-      loading: this.loading
+      loading: this.loading || this.isError || this.isLoading
     }, "Update")), -10);
     return items;
   };
@@ -1121,7 +1195,7 @@ var BlogPostSettingsModal = /*#__PURE__*/function (_Modal) {
   };
 
   _proto.onsubmit = function onsubmit(e) {
-    var _this2 = this;
+    var _this4 = this;
 
     e.preventDefault(); // Submit data
 
@@ -1138,21 +1212,21 @@ var BlogPostSettingsModal = /*#__PURE__*/function (_Modal) {
 
     this.loading = true;
     this.meta.save(this.submitData()).then(function () {
-      if (_this2.attrs.article) {
-        _this2.attrs.article.pushData({
+      if (_this4.attrs.article) {
+        _this4.attrs.article.pushData({
           relationships: {
-            blogMeta: _this2.meta
+            blogMeta: _this4.meta
           }
         });
       }
 
-      _this2.hide();
+      _this4.hide();
 
       m.redraw();
     }, function (response) {
-      _this2.loading = false;
+      _this4.loading = false;
 
-      _this2.handleErrors(response);
+      _this4.handleErrors(response);
     });
   };
 
@@ -1826,6 +1900,7 @@ var BlogItem = /*#__PURE__*/function (_Page) {
         _this$article2$user,
         _app$session$user,
         _app$session,
+        _app$session$user2,
         _this2 = this;
 
     var defaultImage = app.forum.attribute("blogDefaultImage") ? "url(" + (app.forum.attribute("baseUrl") + "/assets/" + app.forum.attribute("blogDefaultImage")) + ")" : null;
@@ -1869,7 +1944,7 @@ var BlogItem = /*#__PURE__*/function (_Page) {
         backgroundImage: blogImage,
         opacity: this.article && this.article.isHidden() ? 0.4 : null
       }
-    }), (canEditArticle || ((_app$session = app.session) == null ? void 0 : _app$session.user.canEdit == null ? void 0 : _app$session.user.canEdit())) && m(_components_BlogPostController__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    }), (canEditArticle || ((_app$session = app.session) == null ? void 0 : (_app$session$user2 = _app$session.user) == null ? void 0 : _app$session$user2.canEdit == null ? void 0 : _app$session$user2.canEdit())) && this.article && m(_components_BlogPostController__WEBPACK_IMPORTED_MODULE_5__["default"], {
       article: this.article
     }), m("div", {
       className: "FlarumBlog-Article-Categories"

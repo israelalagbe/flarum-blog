@@ -14,9 +14,7 @@ export default class BlogPostSettingsModal extends Modal {
           ? this.attrs.article.blogMeta()
           : app.store.createRecord("blogMeta");
     } else {
-      this.meta = this.attrs.meta
-        ? this.attrs.meta
-        : app.store.createRecord("blogMeta");
+      this.meta = this.attrs.meta ? this.attrs.meta : app.store.createRecord("blogMeta");
     }
 
     this.isNew = !this.meta.exists;
@@ -28,6 +26,7 @@ export default class BlogPostSettingsModal extends Modal {
     this.isFeatured = Stream(this.meta.isFeatured() || false);
     this.isSized = Stream(this.meta.isSized() || false);
     this.isPendingReview = Stream(this.meta.isPendingReview() || false);
+    this.formUpload = this.formUpload.bind(this);
   }
 
   className() {
@@ -36,6 +35,81 @@ export default class BlogPostSettingsModal extends Modal {
 
   title() {
     return "Blog post settings";
+  }
+
+  success(response) {
+    this.$("input").val("");
+
+    this.isLoading = false;
+    this.isSuccess = true;
+    m.redraw();
+
+    const link = response.data.link;
+
+    console.log("link", link);
+
+    this.featuredImage(link)
+
+
+    // let stringToInject = this.buildEmbedCode(response.data.link, response.data.width > 1024);
+
+    // this.attrs.editor.insertAtCursor(stringToInject);
+
+    // After a bit, re-enable upload
+    setTimeout(() => {
+      console.log("featuredImage",this.featuredImage())
+      this.isSuccess = false;
+      m.redraw();
+    }, 2000);
+  }
+
+  error(response) {
+    this.isLoading = false;
+    this.isError = true;
+    m.redraw();
+
+    // Output the error to the console, for debugging purposes
+    console.error(response);
+
+    alert("Error occured while uploading the image, please check your internet connection.")
+
+    // After a bit, re-enable upload
+    setTimeout(() => {
+      this.isError = false;
+      m.redraw();
+    }, 2000);
+  }
+
+  formUpload(e) {
+    const files = this.$("input").prop("files");
+
+    if (files.length === 0) {
+      return;
+    }
+    this.upload(files[0]);
+  }
+
+  upload(file) {
+    this.isError = false;
+    this.isLoading = true;
+    m.redraw();
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    $.ajax({
+      url: "https://api.imgur.com/3/image",
+      headers: {
+        Authorization: "Client-ID " + app.forum.attribute("imgur-upload.client-id"),
+      },
+      type: "POST",
+      data: formData,
+      cache: false,
+      contentType: false,
+      processData: false,
+      success: this.success.bind(this),
+      error: this.error.bind(this),
+    });
   }
 
   content() {
@@ -66,8 +140,7 @@ export default class BlogPostSettingsModal extends Modal {
         />
 
         <small>
-          This summary will be visible on the blog overview page and will be
-          used for SEO purposes.
+          This summary will be visible on the blog overview page and will be used for SEO purposes.
         </small>
       </div>,
       30
@@ -76,10 +149,13 @@ export default class BlogPostSettingsModal extends Modal {
     items.add(
       "image",
       <div className="Form-group">
-        <label>Article image URL:</label>
+        <label>Article Image:</label>
+
+        <input accept="image/*" type="file" className="FormControl" onchange={this.formUpload} />
         <input
+          id="articleImageURl"
           type="text"
-          className="FormControl"
+          className="d-none"
           bidi={this.featuredImage}
           placeholder={"https://"}
         />
@@ -127,7 +203,7 @@ export default class BlogPostSettingsModal extends Modal {
           {
             type: "submit",
             className: "Button Button--primary SupportModal-save",
-            loading: this.loading,
+            loading: this.loading || this.isError || this.isLoading,
           },
           "Update"
         )}

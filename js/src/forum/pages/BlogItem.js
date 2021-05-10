@@ -191,9 +191,8 @@ export default class BlogItem extends Page {
                   }}
                 />
 
-                {(canEditArticle || app.session?.user?.canEdit?.()) && this.article && (
-                  <BlogPostController article={this.article} />
-                )}
+                {(canEditArticle || app.session?.user?.canEdit?.()) &&
+                  this.article && <BlogPostController article={this.article} />}
 
                 {/* Article Categories */}
                 <div className={"FlarumBlog-Article-Categories"}>
