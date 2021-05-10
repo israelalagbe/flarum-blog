@@ -7,14 +7,16 @@ import ForumNav from "../ForumNav";
 
 export default class BlogItemSidebar extends Component {
   view() {
+
     return (
-      <div className={"FlarumBlog-Article-Sidebar"}>
+      <div className={`FlarumBlog-Article-Sidebar ${this.attrs.className}`}>
         <ul>{listItems(this.items().toArray())}</ul>
       </div>
     );
   }
 
   items() {
+
     const itemlist = new ItemList();
 
     itemlist.add("author", BlogAuthor.component(this.attrs), 0);

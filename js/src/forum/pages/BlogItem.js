@@ -6,6 +6,8 @@ import BlogPostController from "../components/BlogPostController";
 import BlogItemSidebar from "../components/BlogItemSidebar/BlogItemSidebar";
 import Link from "flarum/components/Link";
 import BlogOverview from "./BlogOverview";
+import humanTime from "flarum/helpers/humanTime";
+import BlogAuthor from "../components/BlogItemSidebar/BlogAuthor";
 
 export default class BlogItem extends Page {
   oninit(vnode) {
@@ -23,6 +25,7 @@ export default class BlogItem extends Page {
     this.loading = true;
     this.found = false;
     this.article = null;
+    this.relatedArticles = [];
 
     this.loadBlogItem();
   }
@@ -45,8 +48,43 @@ export default class BlogItem extends Page {
           m.redraw();
         });
     }
-
     m.redraw();
+  }
+  getRelatedArticles() {
+    const tags = this.article.tags().map((tag) => ` tag:${tag.slug()}`);
+    let q = `is:blog ${tags}`;
+
+    app.store
+      .find("discussions", {
+        filter: {
+          q,
+        },
+        sort: "-createdAt",
+      })
+      .then((articles) => {
+        this.relatedArticles = [...articles]
+          .filter((relatedArticle) => relatedArticle.id() !== this.article.id())
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 3);
+        m.redraw();
+      })
+      .catch((e) => {
+        console.error("error", e);
+      });
+  }
+  getArticleDefaultImage(article) {
+    const defaultImage = app.forum.attribute("blogDefaultImage")
+      ? `url(${
+          app.forum.attribute("baseUrl") + "/assets/" + app.forum.attribute("blogDefaultImage")
+        })`
+      : null;
+
+    const blogImage =
+      article.blogMeta() && article.blogMeta().featuredImage()
+        ? `url(${article.blogMeta().featuredImage()})`
+        : defaultImage;
+
+    return blogImage;
   }
 
   // Show blog post
@@ -56,9 +94,7 @@ export default class BlogItem extends Page {
 
     // Update title
     app.setTitle(
-      `${article.title()} - ${app.translator.trans(
-        "v17development-flarum-blog.forum.blog"
-      )}`
+      `${article.title()} - ${app.translator.trans("v17development-flarum-blog.forum.blog")}`
     );
 
     this.loading = false;
@@ -86,22 +122,18 @@ export default class BlogItem extends Page {
     if (this.near) {
       this.stream.goToNumber(this.near, true);
     }
-
+    this.getRelatedArticles();
     m.redraw();
   }
 
   view() {
     const defaultImage = app.forum.attribute("blogDefaultImage")
       ? `url(${
-          app.forum.attribute("baseUrl") +
-          "/assets/" +
-          app.forum.attribute("blogDefaultImage")
+          app.forum.attribute("baseUrl") + "/assets/" + app.forum.attribute("blogDefaultImage")
         })`
       : null;
     const blogImage =
-      this.article &&
-      this.article.blogMeta() &&
-      this.article.blogMeta().featuredImage()
+      this.article && this.article.blogMeta() && this.article.blogMeta().featuredImage()
         ? `url(${this.article.blogMeta().featuredImage()})`
         : defaultImage;
     let articlePost = null;
@@ -128,9 +160,7 @@ export default class BlogItem extends Page {
             >
               <i class="icon fas fa-angle-left Button-icon"></i>
               <span class="Button-label">
-                {app.translator.trans(
-                  "v17development-flarum-blog.forum.return_to_overview"
-                )}
+                {app.translator.trans("v17development-flarum-blog.forum.return_to_overview")}
               </span>
             </Link>
           </div>
@@ -143,8 +173,7 @@ export default class BlogItem extends Page {
                   }`}
                   style={{
                     backgroundImage: blogImage,
-                    opacity:
-                      this.article && this.article.isHidden() ? 0.4 : null,
+                    opacity: this.article && this.article.isHidden() ? 0.4 : null,
                   }}
                 />
 
@@ -152,8 +181,7 @@ export default class BlogItem extends Page {
                   app.session.user &&
                   (app.session.user.canEdit() ||
                     this.article.canRename() ||
-                    (this.article.posts() &&
-                      this.article.posts()[0].canEdit())) && (
+                    (this.article.posts() && this.article.posts()[0].canEdit())) && (
                     <BlogPostController article={this.article} />
                   )}
 
@@ -165,48 +193,32 @@ export default class BlogItem extends Page {
                     this.article
                       .tags()
                       .map((tag) => (
-                        <Link
-                          href={app.route("blogCategory", { slug: tag.slug() })}
-                        >
+                        <Link href={app.route("blogCategory", { slug: tag.slug() })}>
                           {tag.name()}
                         </Link>
                       ))}
 
                   {this.loading &&
                     [0, 1].map(() => (
-                      <span className={"FlarumBlog-Article-GhostCategory"}>
-                        Category
-                      </span>
+                      <span className={"FlarumBlog-Article-GhostCategory"}>Category</span>
                     ))}
                 </div>
 
                 <div className={"FlarumBlog-Article-Post"}>
                   {/* Article name */}
-                  <h3
-                    className={
-                      this.loading ? "FlarumBlog-Article-GhostTitle" : null
-                    }
-                  >
+                  <h3 className={this.loading ? "FlarumBlog-Article-GhostTitle" : null}>
                     {this.article ? this.article.title() : "Ghost title"}
                     {this.article &&
                       this.article.isHidden() &&
-                      `(${app.translator.trans(
-                        "v17development-flarum-blog.forum.hidden"
-                      )})`}
+                      `(${app.translator.trans("v17development-flarum-blog.forum.hidden")})`}
                   </h3>
 
                   {this.loading &&
                     [0, 1, 2].map(() => (
                       <div>
-                        <p className={"FlarumBlog-Article-GhostParagraph"}>
-                          &nbsp;
-                        </p>
-                        <p className={"FlarumBlog-Article-GhostParagraph"}>
-                          &nbsp;
-                        </p>
-                        <p className={"FlarumBlog-Article-GhostParagraph"}>
-                          &nbsp;
-                        </p>
+                        <p className={"FlarumBlog-Article-GhostParagraph"}>&nbsp;</p>
+                        <p className={"FlarumBlog-Article-GhostParagraph"}>&nbsp;</p>
+                        <p className={"FlarumBlog-Article-GhostParagraph"}>&nbsp;</p>
                         <p>&nbsp;</p>
                       </div>
                     ))}
@@ -215,15 +227,9 @@ export default class BlogItem extends Page {
                     this.article.blogMeta() &&
                     this.article.blogMeta().isPendingReview() == true && (
                       <div className={"Post"}>
-                        <blockquote
-                          class="uncited"
-                          style={{ fontSize: "16px" }}
-                        >
+                        <blockquote class="uncited" style={{ fontSize: "16px" }}>
                           <div>
-                            <span
-                              className={"far fa-clock"}
-                              style={{ marginRight: "5px" }}
-                            />{" "}
+                            <span className={"far fa-clock"} style={{ marginRight: "5px" }} />{" "}
                             {app.translator.trans(
                               "v17development-flarum-blog.forum.review_article.pending_review"
                             )}
@@ -232,9 +238,7 @@ export default class BlogItem extends Page {
                       </div>
                     )}
 
-                  {!this.loading && articlePost && (
-                    <CommentPost post={articlePost} />
-                  )}
+                  {!this.loading && articlePost && <CommentPost post={articlePost} />}
                 </div>
               </div>
 
@@ -246,23 +250,18 @@ export default class BlogItem extends Page {
                   ({this.article ? this.article.commentCount() - 1 : 0})
                 </h4>
                 {/* Locked */}
-                {!this.loading &&
-                  this.article.isLocked &&
-                  this.article.isLocked() && (
-                    <div className={"Post-body"}>
-                      <blockquote class="uncited">
-                        <div>
-                          <span
-                            className={"far fa-lock"}
-                            style={{ marginRight: "5px" }}
-                          />{" "}
-                          {app.translator.trans(
-                            "v17development-flarum-blog.forum.comment_section.locked"
-                          )}
-                        </div>
-                      </blockquote>
-                    </div>
-                  )}
+                {!this.loading && this.article.isLocked && this.article.isLocked() && (
+                  <div className={"Post-body"}>
+                    <blockquote class="uncited">
+                      <div>
+                        <span className={"far fa-lock"} style={{ marginRight: "5px" }} />{" "}
+                        {app.translator.trans(
+                          "v17development-flarum-blog.forum.comment_section.locked"
+                        )}
+                      </div>
+                    </blockquote>
+                  </div>
+                )}
 
                 {!this.loading &&
                   this.article &&
@@ -274,9 +273,96 @@ export default class BlogItem extends Page {
               </div>
             </div>
 
-            <BlogItemSidebar article={this.article} loading={this.loading} />
+            <BlogItemSidebar
+              className="hidden-phone"
+              article={this.article}
+              loading={this.loading}
+            />
+            <div className="FlarumBlog-Article-Sidebar hidden-desktop">
+            <BlogAuthor
+            article={this.article}
+            loading={this.loading}
+          />
+            </div>
+
           </div>
+          <br /><br />
+          {this.relatedArticles.length ? (
+            <div className="BlogRelated">
+              <h2>Related Articles</h2>
+              <div className={"BlogRelated-list"}>
+                {this.relatedArticles.length >= 0 &&
+                  this.relatedArticles.map((article) => {
+                    const blogImage =
+                      article.blogMeta() && article.blogMeta().featuredImage()
+                        ? `url(${article.blogMeta().featuredImage()})`
+                        : defaultImage;
+                    const blogTag = article.tags()
+                      ? article.tags().filter((tag) => tag.isChild())
+                      : [];
+
+                    return (
+                      <Link
+                        href={app.route("blogArticle", {
+                          id: `${article.slug()}`,
+                        })}
+                        className={"BlogRelated-list-item FlarumBlog-Featured-default-image"}
+                        style={{ backgroundImage: blogImage }}
+                      >
+                        <div className={"BlogRelated-list-item-top"}>
+                          {blogTag[0] && <span>{blogTag[0].name()}</span>}
+                          {article.isSticky() && (
+                            <span>
+                              <i className={"fas fa-thumbtack"} />
+                            </span>
+                          )}
+                          {((article.blogMeta() && article.blogMeta().isPendingReview() == true) ||
+                            article.isHidden()) && (
+                            <span>
+                              <i className={"fas fa-eye-slash"} />
+                            </span>
+                          )}
+                          {article.blogMeta() && article.blogMeta().isPendingReview() == true && (
+                            <span
+                              title={app.translator.trans(
+                                "v17development-flarum-blog.forum.review_article.pending_review"
+                              )}
+                              config={tooltip.bind(this)}
+                              data-placement={"bottom"}
+                            >
+                              <i className={"far fa-clock"} />{" "}
+                              {app.translator.trans(
+                                "v17development-flarum-blog.forum.review_article.pending_review_title"
+                              )}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className={"BlogRelated-list-item-details"}>
+                          <h4>{article.title()}</h4>
+
+                          <div className={"data"}>
+                            <span>
+                              <i className={"far fa-clock"} /> {humanTime(article.createdAt())}
+                            </span>
+                            <span>
+                              <i className={"far fa-user"} />{" "}
+                              {article.user() ? article.user().displayName() : "[Deleted]"}
+                            </span>
+                            <span>
+                              <i className={"far fa-comment"} /> {article.commentCount() - 1}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+              </div>
+            </div>
+          ) : null}
+
         </div>
+
       </div>
     );
   }

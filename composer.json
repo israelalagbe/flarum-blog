@@ -3,6 +3,7 @@
     "description": "Adds a blog section to your forum",
     "type": "flarum-extension",
     "license": "MIT",
+    "version": "0.2.1",
     "authors": [
         {
             "name": "V17 Development",

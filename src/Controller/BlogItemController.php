@@ -52,7 +52,7 @@ class BlogItemController
 
             // Set social media title
             \V17Development\FlarumSeo\Extend::setTitle($apiDocument->data->attributes->title, false);
-            
+
             // Article URL
             $fullArticleUrl = $this->url->to('forum')->route('blog.post', ['id' => $apiDocument->data->id . '-' . $apiDocument->data->attributes->slug]);
 
@@ -60,7 +60,7 @@ class BlogItemController
             \V17Development\FlarumSeo\Extend::setCanonicalUrl($fullArticleUrl);
 
             \V17Development\FlarumSeo\Extend::setSchemaJson('@type', 'BlogPosting');
-            
+
 
             // Add summary/title
             if(isset($apiDocument->data->relationships->blogMeta->data->id) && $blogMeta = BlogMeta::find($apiDocument->data->relationships->blogMeta->data->id)) {
@@ -77,7 +77,7 @@ class BlogItemController
 
             // Add article changed
             \V17Development\FlarumSeo\Extend::setPublishedOn($apiDocument->data->attributes->createdAt);
-            
+
             // Add article update time
             if (isset($apiDocument->data->attributes->metaLastEditedTime)) {
                 \V17Development\FlarumSeo\Extend::setUpdatedOn($apiDocument->data->attributes->metaLastEditedTime);
