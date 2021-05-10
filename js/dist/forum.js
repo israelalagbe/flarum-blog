@@ -1820,7 +1820,13 @@ var BlogItem = /*#__PURE__*/function (_Page) {
   };
 
   _proto.view = function view() {
-    var _this2 = this;
+    var _this$article,
+        _this$article$user,
+        _this$article2,
+        _this$article2$user,
+        _app$session$user,
+        _app$session,
+        _this2 = this;
 
     var defaultImage = app.forum.attribute("blogDefaultImage") ? "url(" + (app.forum.attribute("baseUrl") + "/assets/" + app.forum.attribute("blogDefaultImage")) + ")" : null;
     var blogImage = this.article && this.article.blogMeta() && this.article.blogMeta().featuredImage() ? "url(" + this.article.blogMeta().featuredImage() + ")" : defaultImage;
@@ -1830,6 +1836,8 @@ var BlogItem = /*#__PURE__*/function (_Page) {
       articlePost = this.article.firstPost() ? this.article.firstPost() : app.store.getById("posts", this.article.firstPostId());
     }
 
+    var canEditArticle = ((_this$article = this.article) == null ? void 0 : (_this$article$user = _this$article.user()) == null ? void 0 : _this$article$user.id == null ? void 0 : _this$article$user.id()) ? ((_this$article2 = this.article) == null ? void 0 : (_this$article2$user = _this$article2.user()) == null ? void 0 : _this$article2$user.id == null ? void 0 : _this$article2$user.id()) === ((_app$session$user = app.session.user) == null ? void 0 : _app$session$user.id == null ? void 0 : _app$session$user.id()) : false;
+    console.log("canEditArticle");
     return m("div", {
       className: "FlarumBlogItem"
     }, m("div", {
@@ -1861,7 +1869,7 @@ var BlogItem = /*#__PURE__*/function (_Page) {
         backgroundImage: blogImage,
         opacity: this.article && this.article.isHidden() ? 0.4 : null
       }
-    }), this.article && app.session.user && (app.session.user.canEdit() || this.article.canRename() || this.article.posts() && this.article.posts()[0].canEdit()) && m(_components_BlogPostController__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    }), (canEditArticle || ((_app$session = app.session) == null ? void 0 : _app$session.user.canEdit == null ? void 0 : _app$session.user.canEdit())) && m(_components_BlogPostController__WEBPACK_IMPORTED_MODULE_5__["default"], {
       article: this.article
     }), m("div", {
       className: "FlarumBlog-Article-Categories"
